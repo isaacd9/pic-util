@@ -1,0 +1,42 @@
+#!/bin/bash
+set -e
+
+echo "Partitioning files into JPG and NEF..."
+
+base_path=$(dirname $1)
+
+function extensions() {
+  __files=$(ls $base_path);
+  __all_ext=();
+  for file in $__files; do
+    __bn=$(basename -- $file);
+    __extension="${__bn##*.}";
+    __all_ext+=($__extension);
+  done
+  uniq_ext=($(echo "${__all_ext[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '));
+  caps_uniq_ext=($(echo "${__all_ext[@]}" | tr '[a-z]' '[A-Z]' | tr ' ' '\n' | sort -u | tr '\n' ' '));
+  echo ${uniq_ext[@]};
+  echo ${caps_uniq_ext[@]};
+}
+
+function make_directories() {
+  for e in ${caps_uniq_ext[@]}; do
+    echo "Discovered filetype $e. Creating directory."
+    mkdir "$base_path/$e"
+  done
+}
+
+function move_files() {
+  for e in ${uniq_ext[@]}; do
+    target=$(echo $e | tr '[a-z]' '[A-Z]');
+    #echo "Moving *.$e into $target";
+    mv *.$e "$target/"
+  done
+}
+
+extensions;
+make_directories;
+move_files;
+
+"Done!"
+tree .
